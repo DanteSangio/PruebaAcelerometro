@@ -148,6 +148,9 @@ int main(void)
 
 	uint16_t samples[7] = {0,0,0,0,0,0,0}; //cada posicion es de 16 bits, necesario para guardar
 											//la parte low y high de las muestras de accel
+	int16_t samplesAct[7] = {0,0,0,0,0,0,0};
+	int16_t samplesAnt[7] = {0,0,0,0,0,0,0};
+
 
 	uint32_t promX = 0;
 	uint32_t promY = 0;
@@ -182,7 +185,14 @@ int main(void)
 
 	while(1)
 	{
+		I2C_XFER_config(&xfer, rbuf, 14, MPU6050_I2C_SLAVE_ADDRESS, 0, wbuf, 1);
 
+		Fill_Samples(&samples, &rbuf);
+
+		samplesAct[0] = (int32_t)samples[0]; samplesAct[1] = (int32_t)samples[1]; samplesAct[2] = (int32_t)samples[2];
+
+		if ( samplesAct - samplesAnt  )
+/*
 		promX = promY = promZ = 0;
 
 		for ( k = 0 ; k < 100 ; k ++ )
@@ -210,10 +220,14 @@ int main(void)
 			DEBUGOUT("Aviso en eje Z con valor : %d \n", promZ );
 
 		//for ( k=0 ; k<1000 ; k++ );
-
+*/
 		//DEBUGOUT("Aviso en posicion %d con valor : %d \n", 4, samples[4] );
 		//DEBUGOUT("%d          %d          %d          %d          %d          %d          %d\n",samples[0],samples[1],samples[2],samples[3],samples[4],samples[5],samples[6] );
-/*
+		DEBUGOUT("%d          %d          %d \n",samples[0],samples[1],samples[2]);
+
+		for ( k=0 ; k<1000000 ; k++ );
+
+		/*
 		for ( i=0 ; i<1 ; i++ )
 		{
 			if ( samples[i] < 3000 )
