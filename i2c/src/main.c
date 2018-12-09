@@ -99,7 +99,10 @@ static void initHardware(void)
     Board_LED_Set(0, false);
 #endif
 #endif
-    Board_I2C_Init(I2C1);
+	Chip_IOCON_PinMux(LPC_IOCON, 0, 19, IOCON_MODE_INACT, IOCON_FUNC2);
+	Chip_IOCON_PinMux(LPC_IOCON, 0, 20, IOCON_MODE_INACT, IOCON_FUNC2);
+	Chip_IOCON_EnableOD(LPC_IOCON, 0, 19);
+	Chip_IOCON_EnableOD(LPC_IOCON, 0, 20);
 
     /* pines del stick */
 	Chip_IOCON_PinMux(LPC_IOCON, 0, 0, IOCON_MODE_INACT, IOCON_FUNC3);
