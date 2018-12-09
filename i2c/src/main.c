@@ -72,6 +72,9 @@
 #define MPU6050_RA_PWR_MGMT_1    0x6B
 #define MPU6050_RA_PWR_MGMT_2    0x6C
 #define MPU6050_PWR1_SLEEP_BIT   6
+
+#define DEBUGOUT(...) printf(__VA_ARGS__)
+
 /*==================[internal data declaration]==============================*/
 
 /*==================[internal functions declaration]=========================*/
@@ -142,12 +145,17 @@ int main(void)
 	GYRO_ZOUT_H
 	GYRO_ZOUT_L
 	 */
+
 	uint16_t samples[7] = {0,0,0,0,0,0,0}; //cada posicion es de 16 bits, necesario para guardar
 											//la parte low y high de las muestras de accel
+
+	uint32_t promX = 0;
+	uint32_t promY = 0;
+	uint32_t promZ = 0;
+
 	I2C_XFER_T xfer;
 
 	initHardware();
-
 
 	/*==================[Configuracion del I2C_XFER_T]==========================*/
 
@@ -158,23 +166,63 @@ int main(void)
 							//del rbuf ira este dato y en la posicion 1 ira la correspondiente a
 							//la posicion siguiente, osea ACCEL_XOUT_L (0x3C)
 
-
 	MPU6050_wakeup(&xfer);
 
 	//Lectura de PWR_MGMMT_1 2 (para verificar si se lo saco del sleep y de standby a los ejes)
 	wbuf[0] = MPU6050_RA_PWR_MGMT_1;
 	I2C_XFER_config(&xfer, rbuf, 2, MPU6050_I2C_SLAVE_ADDRESS, 0, wbuf, 1);
 
-
 	//Configuracion de la 1era direccion desde la que se leeran los valores de los registros de los sensores
 	wbuf[0]=MPU6050_RA_ACCEL_XOUT_H;
 	wbuf[1]=0;
 
+	int32_t i, k;
+
+	DEBUGOUT("Prueba acelerometro..\n");
+
 	while(1)
 	{
-		I2C_XFER_config(&xfer, rbuf, 14, MPU6050_I2C_SLAVE_ADDRESS, 0, wbuf, 1);
 
-		Fill_Samples(&samples, &rbuf);
+		promX = promY = promZ = 0;
+
+		for ( k = 0 ; k < 100 ; k ++ )
+		{
+			I2C_XFER_config(&xfer, rbuf, 14, MPU6050_I2C_SLAVE_ADDRESS, 0, wbuf, 1);
+
+			Fill_Samples(&samples, &rbuf);
+
+			promX += samples[4];
+			promY += samples[5];
+			promZ += samples[6];
+
+			for ( i=0 ; i<25000 ; i++ );
+		}
+
+		promX /= 100; promY /= 100; promZ /= 100;
+
+		if ( promX < 5000 )
+			DEBUGOUT("Aviso en eje X con valor : %d \n", promX );
+
+		if ( promY < 5000 )
+			DEBUGOUT("Aviso en eje Y con valor : %d \n", promY );
+
+		if ( promZ < 5000 )
+			DEBUGOUT("Aviso en eje Z con valor : %d \n", promZ );
+
+		//for ( k=0 ; k<1000 ; k++ );
+
+		//DEBUGOUT("Aviso en posicion %d con valor : %d \n", 4, samples[4] );
+		//DEBUGOUT("%d          %d          %d          %d          %d          %d          %d\n",samples[0],samples[1],samples[2],samples[3],samples[4],samples[5],samples[6] );
+/*
+		for ( i=0 ; i<1 ; i++ )
+		{
+			if ( samples[i] < 3000 )
+			{
+				if ( i != 4 )
+					DEBUGOUT("Aviso en señal %d con valor : %d \n", i, samples[i] );
+			}
+		}
+*/
 	}
 
 	return 0;
